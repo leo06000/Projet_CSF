@@ -1,60 +1,39 @@
-/* constantes pour les broches */const byte TRIGGER = 6; // broche TRIGGER
-const byte ECHO = 7; // broche ECHO/* Constantes pour le timeou /
-const unsigned long MEASURE_TIMEOUT = 25000UL; // 25ms = 8m à 340m/s/ Vitesse du son dans l'air en mm/us */
-const float SOUND_SPEED = 340.0 / 1000;
+const byte TRIG = 2;
+const byte ECHO = 3;
+const unsigned long tps_mesure = 25000UL; //25msx10¨3= 25000 us 
+const float vts_son_ms = 340.0 / 1000;
 void setup() {
-  
-
-  
-  /*code pour module ultrason HCSR04 */
-  
-  Serial.begin(115200);
-  /* ATTENTION SUR ECRAN SERIAL MONITOR , il faudra choisir 115200 baud dans menu deroulant */
-  pinMode(8, OUTPUT); // LED ROUGE BUZZER
-  digitalWrite(8, LOW);
-  pinMode(9, OUTPUT); // LED VERTE
-  digitalWrite(9, HIGH);
-  pinMode(TRIGGER, OUTPUT);
-  digitalWrite(TRIGGER, LOW);
-  pinMode(ECHO, INPUT);
+  //Initialisation du système 
+  pinMode(4, OUTPUT); // Led rouge
+  digitalWrite(4, LOW); // Led rouge éteinte en état de base
+  pinMode(5, OUTPUT); // Led verte
+  digitalWrite(5, HIGH);// Led verte allumé en état de base
+  pinMode(TRIG, OUTPUT); // Pin d'émission du signal
+  digitalWrite(TRIG, LOW); // Aucun signal émit dans l'état de base
+  pinMode(ECHO, INPUT);// Pin de réception du signal
 }void loop() {
-  /* 1 envoie une impulsion HIGH de 10 us sur broche trigger */
-  digitalWrite(TRIGGER, HIGH);
+  // On crée une émission de 10us qui partira du pin TRIG
+  digitalWrite(TRIG, HIGH);
   delayMicroseconds(10);
-  digitalWrite(TRIGGER, LOW);
+  digitalWrite(TRIG, LOW);
+
+  // Mesure reçoit le temps qui s'est écoulé entre l'émission et réception du signal
+  long mesure = pulseIn(ECHO, HIGH, tps_mesure);
   
-  /* 2 Mesure le temps entre l'envoi de l'impulsion et son echo */
-  long measure = pulseIn(ECHO, HIGH, MEASURE_TIMEOUT);
-  
-  /* 3 calcul la distance a partir du temps mesuré */
-  
-  float distance_mm = measure / 2.0 * SOUND_SPEED;
-  
-  Serial.println("Distance: ");
-  Serial.print(distance_mm);
-  Serial.print("mm (");
-  Serial.print(distance_mm / 10.0, 2);
-  Serial.print("cm, ");
-  Serial.print(distance_mm / 1000.0, 2);
-  Serial.println("m)");
-  
-  
-  if (distance_mm > 600)
+  float distance_mm = mesure / 2.0 * vts_son_ms;// Calcul de la distance entre l'objet et l'émetteur
+  if (distance_mm > 100) // objet est assez loin donc on allume led Verte
   {
-    digitalWrite(8, LOW);
-    digitalWrite(9, HIGH);
+    digitalWrite(4, LOW);
+    digitalWrite(5, HIGH);
   }
-  else if (distance_mm < 1)
+  else if (distance_mm < 1)// objet trop proche pour être détecté , on éteint les LED
   {
-    digitalWrite(8, LOW);
-    digitalWrite(9, LOW);
+    digitalWrite(4, LOW);
+    digitalWrite(5, LOW);
   }
-  else
+  else // l'object est détecté  dans la zone prédéfinit grâce a la ligne 24
   {
-    digitalWrite(8, HIGH);
-    digitalWrite(9, LOW);
+    digitalWrite(4, HIGH);
+    digitalWrite(5, LOW);
   }
-  
-  
-  //delay(3000);
 }
